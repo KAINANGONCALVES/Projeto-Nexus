@@ -13,24 +13,37 @@ export const useAuth = () => {
   useEffect(() => {
     console.log('Setting up auth state listener...');
     
-    // Verificar se já há um usuário autenticado
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      console.log('Current user found:', currentUser);
-      const user: User = {
-        uid: currentUser.uid,
-        email: currentUser.email!,
-        displayName: currentUser.displayName || undefined,
-        photoURL: currentUser.photoURL || undefined,
-        createdAt: new Date()
-      };
-      setUser(user);
-      setLoading(false);
-    }
-
-    const unsubscribe = FirebaseService.onAuthStateChange((user) => {
-      console.log('Auth state changed:', user);
-      setUser(user);
+    const unsubscribe = FirebaseService.onAuthStateChange(async (firebaseUser) => {
+      console.log('Auth state changed:', firebaseUser);
+      
+      if (firebaseUser) {
+        // Buscar perfil completo do Firestore para ter o displayName correto
+        try {
+          const profile = await FirebaseService.getUserProfile(firebaseUser.uid);
+          
+          const user: User = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email!,
+            displayName: profile?.displayName || firebaseUser.displayName || undefined,
+            photoURL: firebaseUser.photoURL || undefined,
+            createdAt: new Date()
+          };
+          setUser(user);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          // Fallback para dados do Firebase Auth
+          const user: User = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email!,
+            displayName: firebaseUser.displayName || undefined,
+            photoURL: firebaseUser.photoURL || undefined,
+            createdAt: new Date()
+          };
+          setUser(user);
+        }
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 

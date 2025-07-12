@@ -122,7 +122,7 @@ const History = () => {
               <HistoryIcon className="w-16 h-16 text-slate-400" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-4">Nenhuma conversão ainda</h2>
-            <p className="text-slate-300 text-center max-w-md mb-8">
+            <p className="text-slate-300 text-center max-w-md mb-8 mx-auto">
               Suas conversões aparecerão aqui para que você possa acompanhar 
               seu histórico de operações.
             </p>

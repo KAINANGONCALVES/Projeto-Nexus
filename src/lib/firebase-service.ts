@@ -38,7 +38,7 @@ export class FirebaseService {
         uid: user.uid,
         email: user.email!,
         displayName,
-        favorites: ['BTC', 'ETH'], // Favoritos padrão
+        favorites: [], // Sem favoritos padrão
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -82,24 +82,11 @@ export class FirebaseService {
     }
   }
 
-  static onAuthStateChange(callback: (user: User | null) => void): () => void {
+  static onAuthStateChange(callback: (firebaseUser: FirebaseUser | null) => void): () => void {
     console.log('Setting up Firebase auth state listener...');
     return onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       console.log('Firebase auth state changed:', firebaseUser);
-      if (firebaseUser) {
-        const user: User = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email!,
-          displayName: firebaseUser.displayName || undefined,
-          photoURL: firebaseUser.photoURL || undefined,
-          createdAt: new Date()
-        };
-        console.log('Created user object:', user);
-        callback(user);
-      } else {
-        console.log('No user, calling callback with null');
-        callback(null);
-      }
+      callback(firebaseUser);
     });
   }
 
@@ -110,7 +97,8 @@ export class FirebaseService {
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
-        return docSnap.data() as UserProfile;
+        const profile = docSnap.data() as UserProfile;
+        return profile;
       }
       return null;
     } catch (error) {

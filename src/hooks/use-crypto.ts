@@ -17,7 +17,7 @@ export const useTopCryptos = (limit: number = 20) => {
   });
 };
 
-export const useCryptoConversion = () => {
+export const useCryptoConversion = (userId?: string) => {
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -36,11 +36,26 @@ export const useCryptoConversion = () => {
       console.log('Resultado da conversão:', result);
       return result;
     },
-    onSuccess: (result) => {
-      // Salvar no histórico
-      const history = JSON.parse(localStorage.getItem('conversions') || '[]');
-      history.unshift(result);
-      localStorage.setItem('conversions', JSON.stringify(history.slice(0, 50)));
+    onSuccess: async (result) => {
+      // Salvar no Firebase se o usuário estiver logado
+      if (userId) {
+        try {
+          const { FirebaseService } = await import('@/lib/firebase-service');
+          await FirebaseService.saveConversion({
+            userId,
+            fromSymbol: result.fromSymbol,
+            toSymbol: result.toSymbol,
+            amount: result.amount,
+            result: result.result,
+            rate: result.rate,
+            date: new Date()
+          });
+          // Invalidar cache das conversões
+          queryClient.invalidateQueries({ queryKey: ['conversions', userId] });
+        } catch (error) {
+          console.error('Erro ao salvar conversão no Firebase:', error);
+        }
+      }
       
       toast({
         title: "Conversão realizada!",

@@ -24,7 +24,7 @@ const Dashboard = () => {
   // Hooks da API
   const { data: cryptos = [], isLoading: isLoadingCryptos, error: cryptosError } = useTopCryptos(20);
   const { favorites, toggleFavorite } = useFavorites(user?.uid || '');
-  const conversionMutation = useCryptoConversion();
+  const conversionMutation = useCryptoConversion(user?.uid);
   const logoutMutation = useLogout();
 
   const handleLogout = async () => {
