@@ -167,22 +167,22 @@ const PriceChart = React.memo(({
       </div>
 
       {chartStats && (
-        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-sm text-slate-400">Preço mais alto</div>
-            <div className="text-lg font-semibold text-white">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-slate-700/30 rounded-lg p-3 text-center">
+            <div className="text-xs sm:text-sm text-slate-400 mb-1">Preço mais alto</div>
+            <div className="text-sm sm:text-lg font-semibold text-white truncate">
               {formatPrice(chartStats.maxPrice)}
             </div>
           </div>
-          <div>
-            <div className="text-sm text-slate-400">Preço mais baixo</div>
-            <div className="text-lg font-semibold text-white">
+          <div className="bg-slate-700/30 rounded-lg p-3 text-center">
+            <div className="text-xs sm:text-sm text-slate-400 mb-1">Preço mais baixo</div>
+            <div className="text-sm sm:text-lg font-semibold text-white truncate">
               {formatPrice(chartStats.minPrice)}
             </div>
           </div>
-          <div>
-            <div className="text-sm text-slate-400">Volume médio</div>
-            <div className="text-lg font-semibold text-white">
+          <div className="bg-slate-700/30 rounded-lg p-3 text-center">
+            <div className="text-xs sm:text-sm text-slate-400 mb-1">Volume médio</div>
+            <div className="text-sm sm:text-lg font-semibold text-white truncate">
               ${(chartStats.avgVolume / 1000000).toFixed(1)}M
             </div>
           </div>

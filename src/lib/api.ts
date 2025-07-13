@@ -1,6 +1,8 @@
 import { CoinGeckoCoin, CryptoData, ConversionResult } from './types';
 
-const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3';
+const COINGECKO_API_BASE = import.meta.env.DEV 
+  ? '/api/coingecko' 
+  : 'https://api.coingecko.com/api/v3';
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -54,6 +56,14 @@ export class CoinGeckoService {
         `/simple/price?ids=${cryptoId}&vs_currencies=${targetCurrency}`
       );
       
+      if (!response || !response[cryptoId]) {
+        throw new Error(`Criptomoeda '${cryptoId}' não encontrada`);
+      }
+      
+      if (!response[cryptoId][targetCurrency]) {
+        throw new Error(`Moeda '${targetCurrency}' não disponível para '${cryptoId}'`);
+      }
+      
       return response[cryptoId][targetCurrency];
     } catch (error) {
       console.error('Erro ao buscar preço:', error);
@@ -75,6 +85,15 @@ export class CoinGeckoService {
         const response = await this.makeRequest<{ [key: string]: { [key: string]: number } }>(
           `/simple/price?ids=${fromCryptoId}&vs_currencies=brl`
         );
+        
+        if (!response || !response[fromCryptoId]) {
+          throw new Error(`Criptomoeda '${fromCryptoId}' não encontrada`);
+        }
+        
+        if (!response[fromCryptoId].brl) {
+          throw new Error(`BRL não disponível para '${fromCryptoId}'`);
+        }
+        
         price = response[fromCryptoId].brl;
         result = amount * price;
       } else {
@@ -173,5 +192,146 @@ export const CRYPTO_ID_MAP: { [key: string]: string } = {
   'NEAR': 'near',
   'FTM': 'fantom',
   'ALGO': 'algorand',
-  'VET': 'vechain'
+  'VET': 'vechain',
+  'USDT': 'tether',
+  'USDC': 'usd-coin',
+  'BNB': 'binancecoin',
+  'DAI': 'dai',
+  'WBTC': 'wrapped-bitcoin',
+  'LEO': 'leo-token',
+  'STETH': 'staked-ether',
+  'OKB': 'okb',
+  'LDO': 'lido-dao',
+  'XLM': 'stellar',
+  'HBAR': 'hedera-hashgraph',
+  'ICP': 'internet-computer',
+  'FIL': 'filecoin',
+  'CRO': 'crypto-com-chain',
+  'MKR': 'maker',
+  'APT': 'aptos',
+  'OP': 'optimism',
+  'ARB': 'arbitrum',
+  'MNT': 'mantle',
+  'SUI': 'sui',
+  'SEI': 'sei-network',
+  'RUNE': 'thorchain',
+  'INJ': 'injective',
+  'FET': 'fetch-ai',
+  'RNDR': 'render-token',
+  'GRT': 'the-graph',
+  'AAVE': 'aave',
+  'SNX': 'havven',
+  'COMP': 'compound-governance-token',
+  'ZEC': 'zcash',
+  'XMR': 'monero',
+  'DASH': 'dash',
+  'NEO': 'neo',
+  'WAVES': 'waves',
+  'XTZ': 'tezos',
+  'CHZ': 'chiliz',
+  'HOT': 'holochain',
+  'BAT': 'basic-attention-token',
+  'ZRX': '0x',
+  'REP': 'augur',
+  'KNC': 'kyber-network-crystal',
+  'MANA': 'decentraland',
+  'SAND': 'the-sandbox',
+  'ENJ': 'enjincoin',
+  'GALA': 'gala',
+  'AXS': 'axie-infinity',
+  'SLP': 'smooth-love-potion',
+  'CHR': 'chromia',
+  'ALPHA': 'alpha-finance',
+  'PERP': 'perpetual-protocol',
+  'RLC': 'iexec-rlc',
+  'STORJ': 'storj',
+  'ANKR': 'ankr',
+  'CKB': 'nervos-network',
+  'COTI': 'coti',
+  'CTSI': 'cartesi',
+  'DUSK': 'dusk-network',
+  'FLR': 'flare-networks',
+  'FLUX': 'zelcash',
+  'FTT': 'ftx-token',
+  'GTC': 'gitcoin',
+  'HIVE': 'hive',
+  'HNT': 'helium',
+  'ICX': 'icon',
+  'IOTA': 'iota',
+  'IOTX': 'iotex',
+  'KAVA': 'kava',
+  'KDA': 'kadena',
+  'KSM': 'kusama',
+  'LRC': 'loopring',
+  'LSK': 'lisk',
+  'LTO': 'lto-network',
+  'LUNA': 'terra-luna-2',
+  'MINA': 'mina-protocol',
+  'MIR': 'mirror-protocol',
+  'NANO': 'nano',
+  'NEXO': 'nexo',
+  'NMR': 'numeraire',
+  'NULS': 'nuls',
+  'OCEAN': 'ocean-protocol',
+  'OGN': 'origin-protocol',
+  'OMG': 'omisego',
+  'ONE': 'harmony',
+  'ONG': 'ong',
+  'ONT': 'ontology',
+  'ORN': 'orion-protocol',
+  'OXT': 'orchid',
+  'PAXG': 'pax-gold',
+  'POLS': 'polkastarter',
+  'POLY': 'polymath',
+  'POND': 'marlin',
+  'POWR': 'power-ledger',
+  'PROM': 'prometeus',
+  'QNT': 'quant',
+  'QTUM': 'qtum',
+  'RAD': 'radicle',
+  'RARE': 'superrare',
+  'RARI': 'rarible',
+  'REN': 'republic-protocol',
+  'REQ': 'request-network',
+  'ROSE': 'oasis-network',
+  'RSR': 'reserve-rights-token',
+  'RVN': 'ravencoin',
+  'SCRT': 'secret',
+  'SKL': 'skale',
+  'SNT': 'status',
+  'SPELL': 'spell-token',
+  'SRM': 'serum',
+  'STEEM': 'steem',
+  'STMX': 'storm',
+  'STRAX': 'straks',
+  'STX': 'blockstack',
+  'SUPER': 'superfarm',
+  'SUSHI': 'sushi',
+  'SWAP': 'trustswap',
+  'SXP': 'sxp',
+  'SYN': 'synapse-network',
+  'SYS': 'syscoin',
+  'TFUEL': 'theta-fuel',
+  'THETA': 'theta-token',
+  'TLM': 'alien-worlds',
+  'TOKE': 'tokemak',
+  'TOMO': 'tomochain',
+  'TRB': 'tellor',
+  'TRIBE': 'tribe',
+  'TRU': 'truefi',
+  'UMA': 'uma',
+  'UOS': 'ultra',
+  'UTK': 'utrust',
+  'VGX': 'voyager-token',
+  'VRA': 'verasity',
+  'VTHO': 'vethor-token',
+  'WOO': 'wootrade',
+  'XDC': 'xdce-crowdsale',
+  'XEC': 'ecash',
+  'XEM': 'nem',
+  'XVG': 'verge',
+  'YFI': 'yearn-finance',
+  'YGG': 'yield-guild-games',
+  'ZEN': 'horizen',
+  'ZIL': 'zilliqa'
 }; 

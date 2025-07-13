@@ -71,46 +71,46 @@ const ConversionPanel = React.memo(({
       </div>
 
       <div className="space-y-6">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Criptomoeda
-            </label>
-            <div className="flex space-x-2">
-              <select
-                value={selectedCrypto}
-                onChange={(e) => setSelectedCrypto(e.target.value)}
-                className="flex-1 p-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-              >
-                {cryptos.map(crypto => (
-                  <option key={crypto.symbol} value={crypto.symbol}>
-                    {crypto.symbol} - {crypto.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={() => setShowSearch(true)}
-                className="p-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white hover:bg-slate-700 transition-all"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Criptomoeda
+                    </label>
+                    <div className="flex space-x-2">
+                      <select
+                        value={selectedCrypto}
+                        onChange={(e) => setSelectedCrypto(e.target.value)}
+                        className="flex-1 p-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm"
+                      >
+                        {cryptos.map(crypto => (
+                          <option key={crypto.symbol} value={crypto.symbol}>
+                            {crypto.symbol} - {crypto.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => setShowSearch(true)}
+                        className="p-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white hover:bg-slate-700 transition-all flex-shrink-0"
+                      >
+                        <Search className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Moeda de Destino
-            </label>
-            <select
-              value={targetCurrency}
-              onChange={(e) => setTargetCurrency(e.target.value)}
-              className="w-full p-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-            >
-              <option value="BRL">BRL - Real Brasileiro</option>
-              <option value="USD">USD - Dólar Americano</option>
-            </select>
-          </div>
-        </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Moeda de Destino
+                    </label>
+                    <select
+                      value={targetCurrency}
+                      onChange={(e) => setTargetCurrency(e.target.value)}
+                      className="w-full p-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm"
+                    >
+                      <option value="BRL">BRL - Real Brasileiro</option>
+                      <option value="USD">USD - Dólar Americano</option>
+                    </select>
+                  </div>
+                </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -234,14 +234,14 @@ const PriceChartSection = React.memo(({
 
   return (
     <div className="mt-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
         <h3 className="text-2xl font-bold text-white">Histórico de Preços</h3>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
           <label className="text-sm font-medium text-slate-300">Criptomoeda:</label>
           <select
             value={selectedCryptoForChart}
             onChange={(e) => setSelectedCryptoForChart(e.target.value)}
-            className="p-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="w-full sm:w-auto p-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm"
           >
             {cryptos.map(crypto => (
               <option key={crypto.symbol} value={crypto.symbol}>
@@ -318,7 +318,7 @@ const CryptosList = React.memo(({
   }
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {cryptos.map(crypto => (
         <CryptoCard
           key={crypto.symbol}
@@ -380,7 +380,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Conversion Panel */}
           <div className="lg:col-span-2">
             <ConversionPanel
