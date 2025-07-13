@@ -21,7 +21,7 @@ export const useAuth = () => {
       console.log('Auth state changed:', firebaseUser);
       
       if (firebaseUser) {
-        // Buscar perfil completo do Firestore para ter o displayName correto
+        // Sempre buscar perfil completo do Firestore para ter o displayName correto
         try {
           const profile = await FirebaseService.getUserProfile(firebaseUser.uid);
           
@@ -113,9 +113,12 @@ export const useRegister = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Erro no registro:', error);
       let message = "Erro no cadastro. Tente novamente.";
       
-      if (error.code === 'auth/email-already-in-use') {
+      if (error.message) {
+        message = error.message;
+      } else if (error.code === 'auth/email-already-in-use') {
         message = "Este email já está em uso.";
       } else if (error.code === 'auth/weak-password') {
         message = "A senha deve ter pelo menos 6 caracteres.";

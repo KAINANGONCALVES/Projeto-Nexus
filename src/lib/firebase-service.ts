@@ -30,29 +30,35 @@ export class FirebaseService {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Atualizar perfil com displayName
-      await updateProfile(user, { displayName });
-
       // Criar perfil do usuário no Firestore
       const userProfile: UserProfile = {
         uid: user.uid,
         email: user.email!,
         displayName,
-        favorites: [], // Sem favoritos padrão
+        favorites: [],
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
       await setDoc(doc(db, 'users', user.uid), userProfile);
 
+      // Atualizar perfil do Firebase Auth com displayName
+      try {
+        await updateProfile(user, { displayName });
+      } catch (profileError) {
+        console.warn('Erro ao atualizar perfil do Firebase Auth:', profileError);
+        // Continuar mesmo se falhar, pois o perfil já está no Firestore
+      }
+
       return {
         uid: user.uid,
         email: user.email!,
-        displayName: user.displayName || displayName,
+        displayName: displayName,
         photoURL: user.photoURL || undefined,
         createdAt: new Date()
       };
     } catch (error: any) {
+      console.error('Erro no registro:', error);
       throw new Error(this.getErrorMessage(error.code));
     }
   }
@@ -62,14 +68,23 @@ export class FirebaseService {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Buscar perfil do Firestore para garantir o displayName correto
+      let profile = null;
+      try {
+        profile = await this.getUserProfile(user.uid);
+      } catch (profileError) {
+        console.warn('Erro ao buscar perfil do Firestore:', profileError);
+      }
+
       return {
         uid: user.uid,
         email: user.email!,
-        displayName: user.displayName || undefined,
+        displayName: profile?.displayName || user.displayName || undefined,
         photoURL: user.photoURL || undefined,
         createdAt: new Date()
       };
     } catch (error: any) {
+      console.error('Erro no login:', error);
       throw new Error(this.getErrorMessage(error.code));
     }
   }
