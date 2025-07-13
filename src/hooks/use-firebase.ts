@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FirebaseService } from '@/lib/firebase-service';
 import { User, UserProfile, FirebaseConversion } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
+
+// Configurações padrão para queries
+const DEFAULT_STALE_TIME = 5 * 60 * 1000; // 5 minutos
+const DEFAULT_GC_TIME = 10 * 60 * 1000; // 10 minutos
 
 // Hook para autenticação
 export const useAuth = () => {
@@ -44,6 +48,7 @@ export const useAuth = () => {
       } else {
         setUser(null);
       }
+      
       setLoading(false);
     });
 
@@ -53,10 +58,42 @@ export const useAuth = () => {
   return { user, loading };
 };
 
+// Hook para login
+export const useLogin = () => {
+  return useMutation({
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      return FirebaseService.loginUser(email, password);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Login realizado",
+        description: "Bem-vindo de volta!",
+      });
+    },
+    onError: (error: any) => {
+      let message = "Erro no login. Tente novamente.";
+      
+      if (error.code === 'auth/user-not-found') {
+        message = "Usuário não encontrado.";
+      } else if (error.code === 'auth/wrong-password') {
+        message = "Senha incorreta.";
+      } else if (error.code === 'auth/invalid-email') {
+        message = "Email inválido.";
+      } else if (error.code === 'auth/too-many-requests') {
+        message = "Muitas tentativas. Tente novamente mais tarde.";
+      }
+      
+      toast({
+        title: "Erro no login",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  });
+};
+
 // Hook para registro
 export const useRegister = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({ 
       email, 
@@ -69,46 +106,26 @@ export const useRegister = () => {
     }) => {
       return FirebaseService.registerUser(email, password, displayName);
     },
-    onSuccess: (user) => {
+    onSuccess: () => {
       toast({
-        title: "Conta criada com sucesso!",
-        description: `Bem-vindo ao TuctorCripto, ${user.displayName}!`,
+        title: "Conta criada",
+        description: "Bem-vindo ao TuctorCripto!",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      let message = "Erro no cadastro. Tente novamente.";
+      
+      if (error.code === 'auth/email-already-in-use') {
+        message = "Este email já está em uso.";
+      } else if (error.code === 'auth/weak-password') {
+        message = "A senha deve ter pelo menos 6 caracteres.";
+      } else if (error.code === 'auth/invalid-email') {
+        message = "Email inválido.";
+      }
+      
       toast({
         title: "Erro no cadastro",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-};
-
-// Hook para login
-export const useLogin = () => {
-  return useMutation({
-    mutationFn: async ({ 
-      email, 
-      password 
-    }: { 
-      email: string; 
-      password: string; 
-    }) => {
-      return FirebaseService.loginUser(email, password);
-    },
-    onSuccess: (user) => {
-      console.log('Login successful:', user);
-      toast({
-        title: "Login realizado!",
-        description: `Bem-vindo de volta, ${user.displayName || user.email}!`,
-      });
-    },
-    onError: (error: Error) => {
-      console.error('Login error:', error);
-      toast({
-        title: "Erro no login",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     }
@@ -117,12 +134,11 @@ export const useLogin = () => {
 
 // Hook para logout
 export const useLogout = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: FirebaseService.logoutUser,
+    mutationFn: async () => {
+      return FirebaseService.logoutUser();
+    },
     onSuccess: () => {
-      queryClient.clear(); // Limpar cache
       toast({
         title: "Logout realizado",
         description: "Até logo!",
@@ -144,7 +160,8 @@ export const useUserProfile = (uid: string) => {
     queryKey: ['userProfile', uid],
     queryFn: () => FirebaseService.getUserProfile(uid),
     enabled: !!uid,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_GC_TIME,
   });
 };
 
@@ -160,7 +177,7 @@ export const useFavorites = (uid: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userProfile', uid] });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Erro ao atualizar favoritos",
         description: "Tente novamente",
@@ -169,7 +186,7 @@ export const useFavorites = (uid: string) => {
     }
   });
 
-  const addFavorite = (symbol: string) => {
+  const addFavorite = useCallback((symbol: string) => {
     if (!profile) return;
     
     const newFavorites = profile.favorites.includes(symbol) 
@@ -182,9 +199,9 @@ export const useFavorites = (uid: string) => {
       title: "Adicionado aos favoritos",
       description: `${symbol} foi adicionado aos seus favoritos.`,
     });
-  };
+  }, [profile, updateFavorites]);
 
-  const removeFavorite = (symbol: string) => {
+  const removeFavorite = useCallback((symbol: string) => {
     if (!profile) return;
     
     const newFavorites = profile.favorites.filter(fav => fav !== symbol);
@@ -194,9 +211,9 @@ export const useFavorites = (uid: string) => {
       title: "Removido dos favoritos",
       description: `${symbol} foi removido dos seus favoritos.`,
     });
-  };
+  }, [profile, updateFavorites]);
 
-  const toggleFavorite = (symbol: string) => {
+  const toggleFavorite = useCallback((symbol: string) => {
     if (!profile) return;
     
     if (profile.favorites.includes(symbol)) {
@@ -204,7 +221,7 @@ export const useFavorites = (uid: string) => {
     } else {
       addFavorite(symbol);
     }
-  };
+  }, [profile, addFavorite, removeFavorite]);
 
   return {
     favorites: profile?.favorites || [],
@@ -224,6 +241,7 @@ export const useConversions = (userId: string) => {
     queryFn: () => FirebaseService.getUserConversions(userId),
     enabled: !!userId,
     staleTime: 1 * 60 * 1000, // 1 minuto
+    gcTime: 5 * 60 * 1000, // 5 minutos
   });
 
   const saveConversion = useMutation({
@@ -233,7 +251,7 @@ export const useConversions = (userId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversions', userId] });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Erro ao salvar conversão",
         description: "Tente novamente",
@@ -253,7 +271,7 @@ export const useConversions = (userId: string) => {
         description: "Conversão removida com sucesso",
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Erro ao remover conversão",
         description: "Tente novamente",
@@ -273,7 +291,7 @@ export const useConversions = (userId: string) => {
         description: "Todas as conversões foram removidas",
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Erro ao limpar histórico",
         description: "Tente novamente",

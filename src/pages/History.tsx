@@ -5,6 +5,7 @@ import { History as HistoryIcon, Filter, Calendar, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import ConversionCard from '@/components/ConversionCard';
+import Footer from '@/components/Footer';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useConversions, useLogout } from '@/hooks/use-firebase';
 
@@ -47,10 +48,10 @@ const History = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
       <Navbar user={{ name: user.displayName || user.email || 'Usuário', avatar: user.photoURL }} onLogout={handleLogout} />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 flex-1">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl">
@@ -145,6 +146,7 @@ const History = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

@@ -135,6 +135,21 @@ export class CoinGeckoService {
       throw error;
     }
   }
+
+  static async getCryptoHistory(cryptoId: string, days: number = 7, currency: string = 'usd'): Promise<{ prices: [number, number][], market_caps: [number, number][], total_volumes: [number, number][] }> {
+    try {
+      const response = await this.makeRequest<{
+        prices: [number, number][];
+        market_caps: [number, number][];
+        total_volumes: [number, number][];
+      }>(`/coins/${cryptoId}/market_chart?vs_currency=${currency}&days=${days}`);
+      
+      return response;
+    } catch (error) {
+      console.error('Erro ao buscar histórico da criptomoeda:', error);
+      throw error;
+    }
+  }
 }
 
 // Mapeamento de símbolos para IDs do CoinGecko

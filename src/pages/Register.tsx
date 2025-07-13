@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { useRegister } from '@/hooks/use-firebase';
 
 const Register = () => {
@@ -68,10 +69,10 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
       <Navbar />
       
-      <div className="flex items-center justify-center min-h-[calc(100vh-64px)] px-4 py-12">
+      <div className="flex items-center justify-center flex-1 px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8">
             <div className="text-center mb-8">
@@ -218,6 +219,7 @@ const Register = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

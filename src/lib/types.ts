@@ -91,4 +91,17 @@ export interface FirebaseConversion {
 export interface FirebaseError {
   code: string;
   message: string;
+}
+
+export interface CryptoHistoryData {
+  prices: [number, number][];
+  market_caps: [number, number][];
+  total_volumes: [number, number][];
+}
+
+export interface ChartDataPoint {
+  date: string;
+  price: number;
+  volume: number;
+  marketCap: number;
 } 

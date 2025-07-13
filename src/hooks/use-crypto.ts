@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CoinGeckoService, CRYPTO_ID_MAP } from '@/lib/api';
-import { CryptoData, ConversionResult } from '@/lib/types';
+import { CryptoData, ConversionResult, CryptoHistoryData, ChartDataPoint } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
+import React from 'react';
+
+// Configurações padrão para queries
+const DEFAULT_STALE_TIME = 5 * 60 * 1000; // 5 minutos
+const DEFAULT_RETRY = 3;
 
 export const useTopCryptos = (limit: number = 20) => {
   return useQuery({
@@ -12,8 +16,9 @@ export const useTopCryptos = (limit: number = 20) => {
       console.log('Dados das criptomoedas:', data);
       return data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 3,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: DEFAULT_RETRY,
+    gcTime: 10 * 60 * 1000, // 10 minutos
   });
 };
 
@@ -58,15 +63,14 @@ export const useCryptoConversion = (userId?: string) => {
       }
       
       toast({
-        title: "Conversão realizada!",
+        title: "Conversão realizada",
         description: `${result.amount} ${result.fromSymbol} = ${result.result.toLocaleString('pt-BR', { 
           style: 'currency', 
-          currency: result.toSymbol 
+          currency: result.toSymbol === 'BRL' ? 'BRL' : 'USD' 
         })}`,
       });
     },
-    onError: (error) => {
-      console.error('Erro na conversão:', error);
+    onError: () => {
       toast({
         title: "Erro na conversão",
         description: "Não foi possível realizar a conversão. Tente novamente.",
@@ -83,6 +87,7 @@ export const useCryptoSearch = (query: string) => {
     enabled: query.length > 2,
     staleTime: 2 * 60 * 1000, // 2 minutos
     retry: 2,
+    gcTime: 5 * 60 * 1000, // 5 minutos
   });
 };
 
@@ -91,85 +96,40 @@ export const useCryptoPrice = (cryptoId: string, currency: string = 'usd') => {
     queryKey: ['cryptoPrice', cryptoId, currency],
     queryFn: () => CoinGeckoService.getCryptoPrice(cryptoId, currency),
     staleTime: 1 * 60 * 1000, // 1 minuto
-    retry: 3,
+    retry: DEFAULT_RETRY,
     enabled: !!cryptoId,
+    gcTime: 2 * 60 * 1000, // 2 minutos
   });
 };
 
-export const useFavorites = () => {
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    const saved = localStorage.getItem('favorites');
-    return saved ? JSON.parse(saved) : ['BTC', 'ETH'];
+export const useCryptoHistory = (cryptoId: string, days: number = 7, currency: string = 'usd') => {
+  return useQuery({
+    queryKey: ['crypto-history', cryptoId, days, currency],
+    queryFn: () => CoinGeckoService.getCryptoHistory(cryptoId, days, currency),
+    enabled: !!cryptoId,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    retry: DEFAULT_RETRY,
   });
-
-  const addFavorite = (symbol: string) => {
-    setFavorites(prev => {
-      const newFavorites = prev.includes(symbol) ? prev : [...prev, symbol];
-      localStorage.setItem('favorites', JSON.stringify(newFavorites));
-      return newFavorites;
-    });
-    
-    toast({
-      title: "Adicionado aos favoritos",
-      description: `${symbol} foi adicionado aos seus favoritos.`,
-    });
-  };
-
-  const removeFavorite = (symbol: string) => {
-    setFavorites(prev => {
-      const newFavorites = prev.filter(fav => fav !== symbol);
-      localStorage.setItem('favorites', JSON.stringify(newFavorites));
-      return newFavorites;
-    });
-    
-    toast({
-      title: "Removido dos favoritos",
-      description: `${symbol} foi removido dos seus favoritos.`,
-    });
-  };
-
-  const toggleFavorite = (symbol: string) => {
-    if (favorites.includes(symbol)) {
-      removeFavorite(symbol);
-    } else {
-      addFavorite(symbol);
-    }
-  };
-
-  return {
-    favorites,
-    addFavorite,
-    removeFavorite,
-    toggleFavorite
-  };
 };
 
-export const useConversionHistory = () => {
-  const [history, setHistory] = useState<ConversionResult[]>(() => {
-    const saved = localStorage.getItem('conversions');
-    return saved ? JSON.parse(saved) : [];
-  });
+export const useProcessedCryptoHistory = (cryptoId: string, days: number = 7, currency: string = 'usd') => {
+  const { data: historyData, isLoading, error } = useCryptoHistory(cryptoId, days, currency);
 
-  const addConversion = (conversion: ConversionResult) => {
-    setHistory(prev => {
-      const newHistory = [conversion, ...prev].slice(0, 50);
-      localStorage.setItem('conversions', JSON.stringify(newHistory));
-      return newHistory;
-    });
-  };
+  const processedData: ChartDataPoint[] = React.useMemo(() => {
+    if (!historyData) return [];
 
-  const clearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem('conversions');
-    toast({
-      title: "Histórico limpo",
-      description: "Todo o histórico de conversões foi removido.",
-    });
-  };
+    return historyData.prices.map(([timestamp, price], index) => ({
+      date: new Date(timestamp).toLocaleDateString('pt-BR'),
+      price,
+      volume: historyData.total_volumes[index]?.[1] || 0,
+      marketCap: historyData.market_caps[index]?.[1] || 0,
+    }));
+  }, [historyData]);
 
   return {
-    history,
-    addConversion,
-    clearHistory
+    data: processedData,
+    isLoading,
+    error,
   };
 }; 

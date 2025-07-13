@@ -5,6 +5,7 @@ import { Star, Heart, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import CryptoCard from '@/components/CryptoCard';
+import Footer from '@/components/Footer';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useTopCryptos } from '@/hooks/use-crypto';
 import { useFavorites, useLogout } from '@/hooks/use-firebase';
@@ -33,10 +34,10 @@ const Favorites = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
       <Navbar user={{ name: user.displayName || user.email || 'Usuário', avatar: user.photoURL }} onLogout={handleLogout} />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 flex-1">
         <div className="flex items-center space-x-3 mb-8">
           <div className="p-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl">
             <Star className="w-8 h-8 text-yellow-400" />
@@ -78,7 +79,7 @@ const Favorites = () => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <div className="text-slate-400 mb-2">Nenhum favorito ainda</div>
+                <div className="text-slate-400 mb-2">Que pena, nenhuma criptomoeda foi favoritada ainda.</div>
                 <div className="text-sm text-slate-500">
                   Adicione criptomoedas aos favoritos para vê-las aqui
                 </div>
@@ -88,7 +89,7 @@ const Favorites = () => {
             {/* Outras Criptomoedas */}
             {otherCryptos.length > 0 && (
               <div>
-                <h2 className="text-xl font-bold text-white mb-4">Adicionar aos Favoritos</h2>
+                <h2 className="text-xl font-bold text-white mb-4">Adicionar aos Favoritos por aqui</h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {otherCryptos.map(crypto => (
                     <CryptoCard
@@ -104,6 +105,7 @@ const Favorites = () => {
           </>
         )}
       </div>
+      <Footer />
     </div>
   );
 };
