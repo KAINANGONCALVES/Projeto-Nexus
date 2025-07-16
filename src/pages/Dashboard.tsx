@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RefreshCw, TrendingUp, ArrowUpDown, Sparkles, Loader2, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -23,6 +23,7 @@ const ConversionPanel = React.memo(({
   targetCurrency, 
   setTargetCurrency, 
   result, 
+  setResult,
   cryptos, 
   conversionMutation, 
   showSearch, 
@@ -35,6 +36,7 @@ const ConversionPanel = React.memo(({
   targetCurrency: string;
   setTargetCurrency: (currency: string) => void;
   result: number | null;
+  setResult: (result: number | null) => void;
   cryptos: any[];
   conversionMutation: any;
   showSearch: boolean;
@@ -51,17 +53,19 @@ const ConversionPanel = React.memo(({
     }
 
     try {
-      const result = await conversionMutation.mutateAsync({
+      const conversionResult = await conversionMutation.mutateAsync({
         fromCrypto: selectedCrypto,
         toCurrency: targetCurrency.toLowerCase(),
         amount: parseFloat(amount)
       });
       
-      // O resultado será atualizado pelo hook
+      // Atualizar o resultado no estado
+      setResult(conversionResult.result);
     } catch (error) {
       console.error('Erro na conversão:', error);
+      setResult(null);
     }
-  }, [amount, selectedCrypto, targetCurrency, conversionMutation]);
+  }, [amount, selectedCrypto, targetCurrency, conversionMutation, setResult]);
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6">
@@ -79,7 +83,11 @@ const ConversionPanel = React.memo(({
                     <div className="flex space-x-2">
                       <select
                         value={selectedCrypto}
-                        onChange={(e) => setSelectedCrypto(e.target.value)}
+                        onChange={(e) => {
+                          setSelectedCrypto(e.target.value);
+                          setResult(null);
+                          // O gráfico será atualizado automaticamente pelo useEffect
+                        }}
                         className="flex-1 p-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm"
                       >
                         {cryptos.map(crypto => (
@@ -103,7 +111,10 @@ const ConversionPanel = React.memo(({
                     </label>
                     <select
                       value={targetCurrency}
-                      onChange={(e) => setTargetCurrency(e.target.value)}
+                      onChange={(e) => {
+                        setTargetCurrency(e.target.value);
+                        setResult(null);
+                      }}
                       className="w-full p-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm"
                     >
                       <option value="BRL">BRL - Real Brasileiro</option>
@@ -119,7 +130,10 @@ const ConversionPanel = React.memo(({
           <input
             type="number"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              setAmount(e.target.value);
+              setResult(null);
+            }}
             placeholder="0.00"
             step="0.00000001"
             className="w-full p-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
@@ -186,8 +200,8 @@ const FavoritesPanel = React.memo(({
 }) => {
   const handleCryptoClick = useCallback((symbol: string) => {
     setSelectedCrypto(symbol);
-    setSelectedCryptoForChart(symbol);
-  }, [setSelectedCrypto, setSelectedCryptoForChart]);
+    // O gráfico será atualizado automaticamente pelo useEffect
+  }, [setSelectedCrypto]);
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6">
@@ -294,8 +308,8 @@ const CryptosList = React.memo(({
 }) => {
   const handleCryptoClick = useCallback((symbol: string) => {
     setSelectedCrypto(symbol);
-    setSelectedCryptoForChart(symbol);
-  }, [setSelectedCrypto, setSelectedCryptoForChart]);
+    // O gráfico será atualizado automaticamente pelo useEffect
+  }, [setSelectedCrypto]);
 
   if (isLoadingCryptos) {
     return (
@@ -354,6 +368,11 @@ const Dashboard = () => {
     [cryptos, favorites]
   );
 
+  // Sincronizar o gráfico com a criptomoeda selecionada para conversão
+  useEffect(() => {
+    setSelectedCryptoForChart(selectedCrypto);
+  }, [selectedCrypto]);
+
   const handleLogout = useCallback(async () => {
     try {
       await logoutMutation.mutateAsync();
@@ -391,6 +410,7 @@ const Dashboard = () => {
               targetCurrency={targetCurrency}
               setTargetCurrency={setTargetCurrency}
               result={result}
+              setResult={setResult}
               cryptos={cryptos}
               conversionMutation={conversionMutation}
               showSearch={showSearch}
@@ -436,6 +456,7 @@ const Dashboard = () => {
           onSelectCrypto={(symbol) => {
             setSelectedCrypto(symbol);
             setShowSearch(false);
+            // O gráfico será atualizado automaticamente pelo useEffect
           }}
           onClose={() => setShowSearch(false)}
         />
